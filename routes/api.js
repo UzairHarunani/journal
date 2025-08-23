@@ -1,26 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { getSuggestions, submitEntry } = require('../controllers/journalController');
+const axios = require('axios');
 
-// Route to submit a journal entry
-router.post('/entries', async (req, res) => {
-    try {
-        const entry = req.body.entry;
-        const response = await submitEntry(entry);
-        res.status(200).json(response);
-    } catch (error) {
-        res.status(500).json({ message: 'Error submitting entry', error });
+const openRouterAPI = axios.create({
+    baseURL: 'https://api.openrouter.com', // Replace with actual OpenRouter API URL
+    headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`
     }
 });
 
-// Route to get AI suggestions based on sentiment analysis
-router.get('/suggestions', async (req, res) => {
+router.post('/submit', async (req, res) => {
+    const { entry } = req.body;
     try {
-        const { mood } = req.query;
-        const suggestions = await getSuggestions(mood);
-        res.status(200).json(suggestions);
+        // Call OpenRouter AI API with the journal entry
+        const response = await openRouterAPI.post('/suggestions', { entry });
+        res.json({ suggestions: response.data.suggestions || [] });
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving suggestions', error });
+        console.error('Error fetching AI suggestions:', error);
+        res.status(500).json({ error: 'Failed to get AI suggestions' });
     }
 });
 

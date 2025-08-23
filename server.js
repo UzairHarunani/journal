@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const apiRoutes = require('./routes/api');
 const axios = require('axios');
 const path = require('path');
 
@@ -16,6 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
+const apiRoutes = require('./routes/api');
 app.use('/api', apiRoutes);
 
 // Start the server
