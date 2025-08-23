@@ -46,14 +46,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const submitBtn = document.getElementById('submit-entry');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', function() {
-            const entry = journalInput.value;
-            if (entry) {
-                submitJournalEntry(entry);
-                journalInput.value = '';
-            }
-        });
-    }
 });
