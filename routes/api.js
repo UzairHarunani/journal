@@ -12,11 +12,18 @@ const openRouterAPI = axios.create({
 router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
-        // Call OpenRouter AI API with the journal entry
-        const response = await openRouterAPI.post('/suggestions', { entry });
-        res.json({ suggestions: response.data.suggestions || [] });
+        const response = await openRouterAPI.post('/v1/chat/completions', {
+            model: "openai/gpt-3.5-turbo", // or another available model
+            messages: [
+                { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
+                { role: "user", content: entry }
+            ]
+        });
+        // Extract the AI's reply
+        const aiReply = response.data.choices[0].message.content;
+        res.json({ suggestions: [aiReply] });
     } catch (error) {
-        console.error('Error fetching AI suggestions:', error);
+        console.error('Error fetching AI suggestions:', error?.response?.data || error.message);
         res.status(500).json({ error: 'Failed to get AI suggestions' });
     }
 });
