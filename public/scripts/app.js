@@ -1,4 +1,4 @@
-const apiUrl = 'http://localhost:5000/api'; // Update with your backend API URL
+const apiUrl = 'https://journal-fddb.onrender.com/api';
 
 document.addEventListener('DOMContentLoaded', () => {
     const journalForm = document.getElementById('journal-form');
