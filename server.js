@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const apiRoutes = require('./routes/api');
 const axios = require('axios');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,6 +11,9 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
 app.use('/api', apiRoutes);
