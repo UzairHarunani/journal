@@ -13,7 +13,7 @@ router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
         const response = await openRouterAPI.post('/v1/chat/completions', {
-            model: "openai/gpt-3.5-turbo", // Try changing this if needed
+            model: "deepseek/deepseek-chat-v3.1", // <-- updated model name
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
