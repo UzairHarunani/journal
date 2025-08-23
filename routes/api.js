@@ -3,7 +3,7 @@ const router = express.Router();
 const axios = require('axios');
 
 const openRouterAPI = axios.create({
-    baseURL: 'https://api.openrouter.com', // Replace with actual OpenRouter API URL
+    baseURL: 'https://openrouter.ai', // Correct base URL
     headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`
     }
