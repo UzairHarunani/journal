@@ -13,13 +13,19 @@ router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
         const response = await openRouterAPI.post('/v1/chat/completions', {
-            model: "openai/gpt-3.5-turbo", // or another available model
+            model: "openai/gpt-3.5-turbo", // Try changing this if needed
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
             ]
         });
-        // Extract the AI's reply
+        console.log('OpenRouter API response:', response.data);
+
+        if (!response.data.choices || !response.data.choices[0]) {
+            console.error('OpenRouter API error:', response.data);
+            return res.status(500).json({ error: 'AI did not return any suggestions.' });
+        }
+
         const aiReply = response.data.choices[0].message.content;
         res.json({ suggestions: [aiReply] });
     } catch (error) {
