@@ -3,9 +3,11 @@ const router = express.Router();
 const axios = require('axios');
 
 const openRouterAPI = axios.create({
-    baseURL: 'https://openrouter.ai', // Correct base URL
+    baseURL: 'https://openrouter.ai',
     headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://journal-fddb.onrender.com/', // <-- or your deployed frontend URL
+        'Content-Type': 'application/json'
     }
 });
 
