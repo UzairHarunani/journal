@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error submitting journal entry:', response.statusText);
             }
         } catch (error) {
-            console.error('Error:', error);
+            const errorData = await error.response?.json?.();
+            console.error('Error submitting journal entry:', errorData || error);
         }
     }
 

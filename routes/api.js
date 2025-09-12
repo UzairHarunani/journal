@@ -30,8 +30,15 @@ router.post('/submit', async (req, res) => {
         const aiReply = response.data.choices[0].message.content;
         res.json({ suggestions: [aiReply] });
     } catch (error) {
-        console.error('Error fetching AI suggestions:', error?.response?.data || error.message);
-        res.status(500).json({ error: 'Failed to get AI suggestions' });
+        // Improved error logging
+        if (error.response) {
+            console.error('Groq API error response:', error.response.data);
+        } else if (error.request) {
+            console.error('Groq API no response:', error.request);
+        } else {
+            console.error('Groq API error:', error.message);
+        }
+        res.status(500).json({ error: 'Failed to get AI suggestions', details: error.response?.data || error.message });
     }
 });
 
