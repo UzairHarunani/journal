@@ -11,9 +11,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (entry) {
             await submitJournalEntry(entry);
+            displayLatestEntry(entry); // <-- Show the user's entry
             journalInput.value = '';
         }
     });
+
+    function displayLatestEntry(entry) {
+        const latestEntryContainer = document.getElementById('latest-entry-container');
+        const latestEntry = document.getElementById('latest-entry');
+        latestEntry.textContent = entry;
+        latestEntryContainer.style.display = 'block';
+    }
 
     async function submitJournalEntry(entry) {
         try {

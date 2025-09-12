@@ -99,3 +99,20 @@ button[type="submit"]:hover {
     box-sizing: border-box;
     display: none;
 }
+
+.latest-entry {
+    width: 100%;
+    background: #f4faff;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+    color: #222;
+    box-sizing: border-box;
+    border-left: 4px solid #2563eb;
+}
+
+.latest-entry h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: #2563eb;
+}
