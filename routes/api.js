@@ -2,43 +2,38 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const groqAPI = axios.create({
-    baseURL: 'https://api.groq.com/openai',
-    headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-    }
-});
+// Use the same env variable name as your working project
+const OPENROUTER_API_KEY = process.env.MPC_KEY; // Or change to your actual key variable
 
 router.post('/submit', async (req, res) => {
     const { entry } = req.body;
-    try {
-        const response = await groqAPI.post('/v1/chat/completions', {
-            model: "openai-gpt-oss-120b", // <-- use this model name
-            messages: [
-                { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
-                { role: "user", content: entry }
-            ]
-        });
-        console.log('Groq API response:', response.data);
 
-        if (!response.data.choices || !response.data.choices[0]) {
-            console.error('Groq API error:', response.data);
-            return res.status(500).json({ error: 'AI did not return any suggestions.' });
-        }
+    // You can customize the system prompt for journaling
+    const systemPrompt = "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry.";
+
+    try {
+        const response = await axios.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            {
+                model: "mistralai/mixtral-8x7b-instruct", // Or update to a currently supported model
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: entry }
+                ]
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
 
         const aiReply = response.data.choices[0].message.content;
         res.json({ suggestions: [aiReply] });
     } catch (error) {
-        // Improved error logging
-        if (error.response) {
-            console.error('Groq API error response:', error.response.data);
-        } else if (error.request) {
-            console.error('Groq API no response:', error.request);
-        } else {
-            console.error('Groq API error:', error.message);
-        }
-        res.status(500).json({ error: 'Failed to get AI suggestions', details: error.response?.data || error.message });
+        console.error('Error contacting AI:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Failed to get AI suggestions' });
     }
 });
 
