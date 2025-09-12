@@ -15,7 +15,7 @@ router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
         const response = await openRouterAPI.post('/v1/chat/completions', {
-            model: "mistral/mixtral-8x7b-instruct",
+            model: "mistralai/mixtral-8x7b-instruct", // <-- fixed model name
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
