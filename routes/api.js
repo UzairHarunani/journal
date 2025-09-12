@@ -6,7 +6,7 @@ const openRouterAPI = axios.create({
     baseURL: 'https://openrouter.ai',
     headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://journal-fddb.onrender.com/ ', // <-- or your deployed frontend URL
+        'HTTP-Referer': 'https://journal-fddb.onrender.com/',
         'Content-Type': 'application/json'
     }
 });
