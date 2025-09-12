@@ -6,7 +6,7 @@ const openRouterAPI = axios.create({
     baseURL: 'https://openrouter.ai',
     headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://journal-fddb.onrender.com/', // <-- or your deployed frontend URL
+        'HTTP-Referer': 'https://journal-fddb.onrender.com/ ', // <-- or your deployed frontend URL
         'Content-Type': 'application/json'
     }
 });
@@ -15,7 +15,7 @@ router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
         const response = await openRouterAPI.post('/v1/chat/completions', {
-            model: "deepseek/deepseek-chat-v3.1", // <-- updated model name
+            model: "openai/gpt-5", // <-- updated to GPT-5
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
