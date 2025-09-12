@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (entry) {
             await submitJournalEntry(entry);
             displayLatestEntry(entry); // <-- Show the user's entry
+            saveEntry(entry); // <-- Save to local storage
+            loadEntries();    // <-- Refresh history
             journalInput.value = '';
         }
     });
@@ -55,5 +57,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('suggestions-container').style.display = 'block';
     }
+
+    function saveEntry(entry) {
+        const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+        entries.unshift({ text: entry, date: new Date().toISOString() });
+        localStorage.setItem('journalEntries', JSON.stringify(entries));
+    }
+
+    function loadEntries() {
+        const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+        const historyContainer = document.getElementById('history-container');
+        if (historyContainer) {
+            historyContainer.innerHTML = '';
+            entries.forEach(e => {
+                const div = document.createElement('div');
+                div.className = 'history-entry';
+                div.innerHTML = `<div>${e.text}</div><small>${new Date(e.date).toLocaleString()}</small>`;
+                historyContainer.appendChild(div);
+            });
+        }
+    }
+
+    // Call loadEntries on page load:
+    loadEntries();
+
+    document.getElementById('export-btn').addEventListener('click', () => {
+        const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+        let text = entries.map(e => `${new Date(e.date).toLocaleString()}\n${e.text}\n`).join('\n---\n');
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'journal.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // Daily prompt logic
+    const prompts = [
+        "What was one thing you learned today?",
+        "Describe a moment that made you smile.",
+        "What challenge did you overcome today?",
+        "How are you feeling right now?"
+    ];
+    document.getElementById('daily-prompt').textContent =
+        prompts[new Date().getDate() % prompts.length];
 
 });

@@ -116,3 +116,16 @@ button[type="submit"]:hover {
     font-size: 1.1rem;
     color: #2563eb;
 }
+
+.history-entry {
+    background: #f4faff;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.98rem;
+}
+
+.history-entry small {
+    color: #2563eb;
+    font-size: 0.8rem;
+}

@@ -6,7 +6,7 @@ const axios = require('axios');
 const OPENROUTER_API_KEY = process.env.MPC_KEY; // Or change to your actual key variable
 
 router.post('/submit', async (req, res) => {
-    const { entry } = req.body;
+    const { entry, mood } = req.body;
 
     // You can customize the system prompt for journaling
     const systemPrompt = "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry.";
