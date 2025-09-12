@@ -15,7 +15,7 @@ router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
         const response = await openRouterAPI.post('/v1/chat/completions', {
-            model: "qwen/qwen3-next-80b-a3b-thinking", // <-- updated to Qwen3 Next 80B A3B Thinking
+            model: "mistralai/mixtral-8x7b-instruct",
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
