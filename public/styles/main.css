@@ -1,8 +1,7 @@
 body {
-    background: #f6f8fa;
+    background: #e3eefd;
     font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    padding: 0;
     min-height: 100vh;
 }
 
@@ -16,6 +15,26 @@ header {
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
+.container {
+    background: #fff;
+    max-width: 400px;
+    margin: 60px auto 0 auto;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    color: #2563eb;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
 main {
     max-width: 600px;
     margin: 2rem auto;
@@ -26,42 +45,57 @@ main {
 }
 
 #journal-form {
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
 #journal-input {
-    min-height: 120px;
+    min-height: 60px;
+    max-height: 120px;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    padding: 1rem;
-    font-size: 1.1rem;
+    border: 1px solid #b6d0fa;
+    padding: 0.75rem;
+    font-size: 1rem;
     resize: vertical;
-    background: #f9fafb;
+    background: #f4faff;
+    color: #222;
+    transition: border 0.2s;
+}
+
+#journal-input:focus {
+    border: 1.5px solid #2563eb;
+    outline: none;
+    background: #eaf3ff;
 }
 
 button[type="submit"] {
-    background: #3182ce;
+    background: #2563eb;
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
     transition: background 0.2s;
+    align-self: flex-end;
 }
 
 button[type="submit"]:hover {
-    background: #2563eb;
+    background: #174bbd;
 }
 
 .suggestions {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: #ebf8ff;
-    border-left: 4px solid #3182ce;
+    margin-top: 1.5rem;
+    width: 100%;
+    background: #eaf3ff;
+    border-left: 4px solid #2563eb;
     border-radius: 8px;
-    color: #2a4365;
-    font-size: 1.05rem;
+    color: #174bbd;
+    font-size: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
+    display: none;
 }

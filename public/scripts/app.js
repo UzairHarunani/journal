@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestionElement.textContent = suggestion;
             suggestionsContainer.appendChild(suggestionElement);
         });
+        document.getElementById('suggestions-container').style.display = 'block';
     }
 
 });
