@@ -2,11 +2,10 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const openRouterAPI = axios.create({
-    baseURL: 'https://openrouter.ai',
+const groqAPI = axios.create({
+    baseURL: 'https://api.groq.com/openai',
     headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://journal-fddb.onrender.com/',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
         'Content-Type': 'application/json'
     }
 });
@@ -14,17 +13,17 @@ const openRouterAPI = axios.create({
 router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
-        const response = await openRouterAPI.post('/v1/chat/completions', {
-            model: "mistralai/mixtral-8x7b-instruct", // <-- fixed model name
+        const response = await groqAPI.post('/v1/chat/completions', {
+            model: "mixtral-8x7b-32768", // or "llama3-70b-8192", "llama3-8b-8192", etc.
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
             ]
         });
-        console.log('OpenRouter API response:', response.data);
+        console.log('Groq API response:', response.data);
 
         if (!response.data.choices || !response.data.choices[0]) {
-            console.error('OpenRouter API error:', response.data);
+            console.error('Groq API error:', response.data);
             return res.status(500).json({ error: 'AI did not return any suggestions.' });
         }
 
