@@ -14,7 +14,7 @@ router.post('/submit', async (req, res) => {
     const { entry } = req.body;
     try {
         const response = await groqAPI.post('/v1/chat/completions', {
-            model: "llama3-70b-8192", // <--- updated model
+            model: "openai-gpt-oss-120b", // <-- use this model name
             messages: [
                 { role: "system", content: "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry." },
                 { role: "user", content: entry }
