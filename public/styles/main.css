@@ -152,3 +152,25 @@ button[type="submit"]:hover {
     outline: none;
     background: #eaf3ff;
 }
+
+/* Transparent style for action buttons */
+.ai-response-btn,
+.delete-btn,
+#export-btn {
+    background: transparent;
+    color: #2563eb;
+    border: 1.5px solid #2563eb;
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-right: 0.5rem;
+}
+
+.ai-response-btn:hover,
+.delete-btn:hover,
+#export-btn:hover {
+    background: #2563eb;
+    color: #fff;
+}
