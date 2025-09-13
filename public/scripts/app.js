@@ -4,17 +4,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const journalForm = document.getElementById('journal-form');
     const journalInput = document.getElementById('journal-input');
     const suggestionsContainer = document.getElementById('suggestions-container');
+    const moodSelect = document.getElementById('mood-select');
 
     journalForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const entry = journalInput.value;
+        const mood = moodSelect.value;
 
         if (entry) {
-            await submitJournalEntry(entry);
-            displayLatestEntry(entry); // <-- Show the user's entry
-            saveEntry(entry); // <-- Save to local storage
-            loadEntries();    // <-- Refresh history
-            journalInput.value = '';
+            try {
+                const response = await fetch(`${apiUrl}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entry, mood }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displaySuggestions(data.suggestions);
+                    saveEntry(entry, data.suggestions[0], mood); // Only save here, with AI response and mood
+                    loadEntries();
+                    displayLatestEntry(entry);
+                    journalInput.value = '';
+                } else {
+                    console.error('Error submitting journal entry:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error submitting journal entry:', error);
+            }
         }
     });
 
@@ -25,30 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         latestEntryContainer.style.display = 'block';
     }
 
-    async function submitJournalEntry(entry) {
-        try {
-            const response = await fetch(`${apiUrl}/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ entry }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                displaySuggestions(data.suggestions);
-                saveEntry(entry, data.suggestions[0]); // Save AI response with entry
-                loadEntries();    // Refresh history
-            } else {
-                console.error('Error submitting journal entry:', response.statusText);
-            }
-        } catch (error) {
-            const errorData = await error.response?.json?.();
-            console.error('Error submitting journal entry:', errorData || error);
-        }
-    }
-
     function displaySuggestions(suggestions) {
         suggestionsContainer.innerHTML = '';
         suggestions.forEach(suggestion => {
@@ -57,13 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestionElement.textContent = suggestion;
             suggestionsContainer.appendChild(suggestionElement);
         });
-        document.getElementById('suggestions-container').style.display = 'block';
+        suggestionsContainer.style.display = 'block';
     }
 
-    // Update saveEntry to accept AI response
-    function saveEntry(entry, aiResponse = "") {
+    function saveEntry(entry, aiResponse, mood = "") {
         const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-        entries.unshift({ text: entry, ai: aiResponse, date: new Date().toISOString() });
+        entries.unshift({ text: entry, aiResponse, mood, date: new Date().toISOString() });
         localStorage.setItem('journalEntries', JSON.stringify(entries));
     }
 
@@ -77,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.className = 'history-entry';
                 div.innerHTML = `
                     <div>${e.text}</div>
-                    <small>${new Date(e.date).toLocaleString()}</small>
+                    <small>${new Date(e.date).toLocaleString()}${e.mood ? ` | Mood: ${e.mood}` : ''}</small>
                     <div style="margin-top: 0.5rem;">
                         <button class="ai-response-btn" data-idx="${idx}">AI Response</button>
                         <button class="delete-btn" data-idx="${idx}">Delete</button>
@@ -100,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const idx = this.getAttribute('data-idx');
                     const aiDiv = this.parentElement.nextElementSibling;
                     const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-                    aiDiv.textContent = entries[idx].ai || "No AI response saved.";
+                    aiDiv.textContent = entries[idx].aiResponse || "No AI response saved.";
                     aiDiv.style.display = aiDiv.style.display === 'block' ? 'none' : 'block';
                 });
             });
@@ -119,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('export-btn').addEventListener('click', () => {
         const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-        let text = entries.map(e => `${new Date(e.date).toLocaleString()}\n${e.text}\n`).join('\n---\n');
+        let text = entries.map(e => `${new Date(e.date).toLocaleString()}\n${e.text}\nAI: ${e.aiResponse}\n`).join('\n---\n');
         const blob = new Blob([text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
