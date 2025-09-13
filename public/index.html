@@ -11,7 +11,16 @@
         <h1>Welcome to Your AI-Powered Personal Journal</h1>
         <form id="journal-form">
             <textarea id="journal-input" placeholder="Write your thoughts here..."></textarea>
-            <button id="submit-entry" type="submit">Submit</button>
+            <div class="form-row">
+                <select id="mood-select">
+                    <option value="">Select mood</option>
+                    <option value="happy">😊 Happy</option>
+                    <option value="tired">😴 Tired</option>
+                    <option value="stressed">😰 Stressed</option>
+                    <option value="excited">🤩 Excited</option>
+                </select>
+                <button id="submit-entry" type="submit">Submit</button>
+            </div>
         </form>
         <div id="latest-entry-container" class="latest-entry" style="display:none;">
             <h2>Your Entry</h2>
@@ -19,15 +28,10 @@
         </div>
         <div id="suggestions-container"></div>
         <div id="history-container"></div>
-        <select id="mood-select">
-            <option value="">Select mood</option>
-            <option value="happy">😊 Happy</option>
-            <option value="tired">😴 Tired</option>
-            <option value="stressed">😰 Stressed</option>
-            <option value="excited">🤩 Excited</option>
-        </select>
-        <button id="export-btn">Export Journal</button>
+        <br>
         <div id="daily-prompt"></div>
+        <br>
+        <button id="export-btn">Export Journal</button>
     </div>
     <script src="scripts/app.js"></script>
 </body>

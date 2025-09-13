@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 displaySuggestions(data.suggestions);
+                saveEntry(entry, data.suggestions[0]); // Save AI response with entry
+                loadEntries();    // Refresh history
             } else {
                 console.error('Error submitting journal entry:', response.statusText);
             }
@@ -58,9 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('suggestions-container').style.display = 'block';
     }
 
-    function saveEntry(entry) {
+    // Update saveEntry to accept AI response
+    function saveEntry(entry, aiResponse = "") {
         const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-        entries.unshift({ text: entry, date: new Date().toISOString() });
+        entries.unshift({ text: entry, ai: aiResponse, date: new Date().toISOString() });
         localStorage.setItem('journalEntries', JSON.stringify(entries));
     }
 
@@ -69,13 +72,46 @@ document.addEventListener('DOMContentLoaded', () => {
         const historyContainer = document.getElementById('history-container');
         if (historyContainer) {
             historyContainer.innerHTML = '';
-            entries.forEach(e => {
+            entries.forEach((e, idx) => {
                 const div = document.createElement('div');
                 div.className = 'history-entry';
-                div.innerHTML = `<div>${e.text}</div><small>${new Date(e.date).toLocaleString()}</small>`;
+                div.innerHTML = `
+                    <div>${e.text}</div>
+                    <small>${new Date(e.date).toLocaleString()}</small>
+                    <div style="margin-top: 0.5rem;">
+                        <button class="ai-response-btn" data-idx="${idx}">AI Response</button>
+                        <button class="delete-btn" data-idx="${idx}">Delete</button>
+                    </div>
+                    <div class="ai-response" style="display:none; margin-top:0.5rem; background:#eaf3ff; border-radius:6px; padding:0.5rem; color:#174bbd;"></div>
+                `;
                 historyContainer.appendChild(div);
             });
+
+            // Add event listeners for delete and AI response buttons
+            historyContainer.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = this.getAttribute('data-idx');
+                    deleteEntry(idx);
+                });
+            });
+
+            historyContainer.querySelectorAll('.ai-response-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = this.getAttribute('data-idx');
+                    const aiDiv = this.parentElement.nextElementSibling;
+                    const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+                    aiDiv.textContent = entries[idx].ai || "No AI response saved.";
+                    aiDiv.style.display = aiDiv.style.display === 'block' ? 'none' : 'block';
+                });
+            });
         }
+    }
+
+    function deleteEntry(idx) {
+        const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+        entries.splice(idx, 1);
+        localStorage.setItem('journalEntries', JSON.stringify(entries));
+        loadEntries();
     }
 
     // Call loadEntries on page load:
