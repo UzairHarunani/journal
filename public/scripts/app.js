@@ -68,14 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const div = document.createElement('div');
                 div.className = 'history-entry';
                 div.innerHTML = `
-                    <div>${e.text}</div>
-                    <small>${new Date(e.date).toLocaleString()}${e.mood ? ` | Mood: ${e.mood}` : ''}</small>
-                    <div style="margin-top: 0.5rem;">
-                        <button class="ai-response-btn" data-idx="${idx}">AI Response</button>
-                        <button class="delete-btn" data-idx="${idx}">Delete</button>
-                    </div>
-                    <div class="ai-response" style="display:none; margin-top:0.5rem; background:#eaf3ff; border-radius:6px; padding:0.5rem; color:#174bbd;"></div>
-                `;
+    <div>${e.text}</div>
+    <small>${new Date(e.date).toLocaleString()}${e.mood ? ` | Mood: ${e.mood}` : ''}</small>
+    <div style="margin-top: 0.5rem;">
+        <button class="ai-response-btn" data-idx="${idx}">AI Response</button>
+        <button class="delete-btn" data-idx="${idx}">Delete</button>
+    </div>
+    <div class="ai-response" style="display:none; margin-top:0.5rem; background:#eaf3ff; border-radius:6px; padding:0.5rem; color:#174bbd;"></div>
+`;
                 historyContainer.appendChild(div);
             });
 
