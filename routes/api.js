@@ -31,7 +31,7 @@ router.post('/submit', async (req, res) => {
 
         const aiReplyRaw = response.data.choices[0].message.content;
         // Replace every * with a new line
-        const aiReply = aiReplyRaw.split('*').join('\n');
+        const aiReply = aiReplyRaw.split('*').join('<br>');
         res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
