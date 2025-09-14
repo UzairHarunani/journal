@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const idx = this.getAttribute('data-idx');
                     const aiDiv = this.parentElement.nextElementSibling;
                     const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-                    aiDiv.textContent = entries[idx].aiResponse || "No AI response saved.";
+                    aiDiv.innerHTML = entries[idx].aiResponse || "No AI response saved."; // Use innerHTML here
                     aiDiv.style.display = aiDiv.style.display === 'block' ? 'none' : 'block';
                 });
             });

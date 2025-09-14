@@ -39,6 +39,4 @@ router.post('/submit', async (req, res) => {
     }
 });
 
-aiDiv.innerHTML = entries[idx].aiResponse || "No AI response saved.";
-
 module.exports = router;
