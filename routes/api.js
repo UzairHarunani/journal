@@ -15,7 +15,7 @@ router.post('/submit', async (req, res) => {
         const response = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-                model: "mistralai/mixtral-8x7b-instruct", // Or update to a currently supported model
+                model: "openai/gpt-4o-mini", // Or update to a currently supported model
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: entry }
