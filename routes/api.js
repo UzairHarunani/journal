@@ -29,7 +29,6 @@ router.post('/submit', async (req, res) => {
             }
         );
 
-        const aiReplyRaw = response.data.choices[0].message.content;
         res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
