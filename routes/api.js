@@ -15,7 +15,7 @@ router.post('/submit', async (req, res) => {
         const response = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-                model: "openai/gpt-4o-mini", // Or update to a currently supported model
+                model: "mistralai/mixtral-8x7b-instruct", // Or update to a currently supported model
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: entry }
@@ -29,6 +29,9 @@ router.post('/submit', async (req, res) => {
             }
         );
 
+        const aiReplyRaw = response.data.choices[0].message.content;
+        // Replace every * with a new line
+        const aiReply = aiReplyRaw.split('*').join('<br>');
         res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
