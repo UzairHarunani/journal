@@ -30,6 +30,7 @@ router.post('/submit', async (req, res) => {
     const systemPrompt = "You are a helpful AI journal assistant. Give suggestions, prompts, or positive feedback based on the user's journal entry.";
 
     try {
+        // Lower max tokens to a safe default to avoid quota errors.
         const response = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
@@ -38,7 +39,7 @@ router.post('/submit', async (req, res) => {
                     { role: "system", content: systemPrompt },
                     { role: "user", content: entry }
                 ],
-                max_tokens: 512,        // limit tokens to avoid exceeding quota
+                max_tokens: 256,
                 temperature: 0.7,
                 n: 1
             },
@@ -56,13 +57,21 @@ router.post('/submit', async (req, res) => {
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
         const respData = error.response ? error.response.data : null;
-        // If provider reports insufficient credits / payment required, return 402-like info
+
+        // If provider reports insufficient credits, return safe fallback suggestions so the app still works.
         if (respData && respData.error && respData.error.code === 402) {
-            return res.status(402).json({
-                error: 'Insufficient credits for AI request',
-                details: respData.error.message || respData
+            console.warn('AI provider returned insufficient credits. Returning fallback suggestions.');
+            const fallback = [
+                "Take a few deep breaths and describe one small thing that went well today.",
+                "What made you feel grateful today? Write about it in one or two sentences.",
+                "If you could change one small thing about today, what would it be and why?"
+            ];
+            return res.json({
+                suggestions: fallback,
+                warning: 'Insufficient AI credits — served local fallback suggestions. Check your OpenRouter account.'
             });
         }
+
         const details = respData || error.message;
         return res.status(502).json({ error: 'Failed to get AI suggestions', details });
     }
