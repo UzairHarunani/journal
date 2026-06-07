@@ -55,79 +55,32 @@ router.post('/submit', async (req, res) => {
         const resp = response.data;
         console.log('AI raw response:', resp);
 
-        // First check known response shapes (OpenRouter / chat completions / outputs)
-        let aiReply = null;
-
-        // 1) choices.message.content (chat-completions)
-        const choice = resp?.choices?.[0];
-        if (choice) {
-            const msg = choice.message ?? choice;
-            if (typeof msg === 'string') aiReply = msg;
-            else if (typeof msg?.content === 'string') aiReply = msg.content;
-            else if (Array.isArray(msg?.content?.parts)) aiReply = msg.content.parts.join(' ');
-            else if (typeof choice.text === 'string') aiReply = choice.text;
-        }
-
-        // 2) output -> content -> text (other OpenRouter shapes)
-        if (!aiReply && Array.isArray(resp?.output)) {
-            const c0 = resp.output[0];
-            aiReply = c0?.content?.[0]?.text ?? aiReply;
-        }
-        if (!aiReply && Array.isArray(resp?.outputs)) {
-            const o0 = resp.outputs[0];
-            aiReply = o0?.data?.[0]?.text ?? aiReply;
-        }
-
-        // 3) fallback common fields
-        if (!aiReply && typeof resp?.data?.[0]?.text === 'string') aiReply = resp.data[0].text;
-        if (!aiReply && typeof resp?.generated_text === 'string') aiReply = resp.generated_text;
-
-        // 4) deep scan but prefer non-id and multi-word strings
-        if (!aiReply) {
-            function isIdLike(s) { return typeof s === 'string' && /^gen-[\w-]{6,}/i.test(s.trim()); }
-            function deepFind(obj, depth = 0) {
-                if (depth > 12 || obj == null) return null;
-                if (typeof obj === 'string') return obj;
-                if (Array.isArray(obj)) {
-                    for (const it of obj) {
-                        const r = deepFind(it, depth + 1);
-                        if (r && !isIdLike(r) && (r.includes(' ') || r.length > 30)) return r;
-                    }
-                    for (const it of obj) {
-                        const r = deepFind(it, depth + 1);
-                        if (r && !isIdLike(r)) return r;
-                    }
-                    return null;
-                }
-                if (typeof obj === 'object') {
-                    for (const v of Object.values(obj)) {
-                        const r = deepFind(v, depth + 1);
-                        if (r && !isIdLike(r) && (r.includes(' ') || r.length > 30)) return r;
-                    }
-                    for (const v of Object.values(obj)) {
-                        const r = deepFind(v, depth + 1);
-                        if (r) return r;
-                    }
-                }
-                return null;
+        // New robust extractor: collect strings, ignore gen-* ids, pick best candidate
+        function collectStrings(obj, out = [], depth = 0) {
+            if (depth > 12 || obj == null) return out;
+            if (typeof obj === 'string') { out.push(obj); return out; }
+            if (typeof obj === 'number' || typeof obj === 'boolean') { out.push(String(obj)); return out; }
+            if (Array.isArray(obj)) { for (const it of obj) collectStrings(it, out, depth + 1); return out; }
+            if (typeof obj === 'object') {
+                // Prefer common fields first
+                const keys = ['content','message','text','generated_text','output','outputs','data','response','body','result'];
+                for (const k of keys) if (k in obj) collectStrings(obj[k], out, depth + 1);
+                for (const v of Object.values(obj)) collectStrings(v, out, depth + 1);
             }
-            aiReply = deepFind(resp) || null;
+            return out;
         }
 
-        // Final fallback: first non-empty string candidate or JSON
-        if (!aiReply) {
-            function collect(obj, arr, d = 0) {
-                if (d > 12 || obj == null) return;
-                if (typeof obj === 'string') { arr.push(obj); return; }
-                if (Array.isArray(obj)) { for (const it of obj) collect(it, arr, d + 1); return; }
-                if (typeof obj === 'object') { for (const v of Object.values(obj)) collect(v, arr, d + 1); }
-            }
-            const cand = [];
-            collect(resp, cand);
-            aiReply = cand.find(s => !/^gen-/.test(s)) || cand[0] || JSON.stringify(resp);
-        }
+        const all = collectStrings(resp, []);
+        // remove empty and whitespace-only
+        const cleaned = all.map(s => String(s).replace(/\s+/g, ' ').trim()).filter(Boolean);
+        // prefer multi-word or long strings that are not gen- ids
+        const isGenId = s => /^gen-[\w-]+$/i.test(s);
+        let aiReply = cleaned.find(s => !isGenId(s) && (s.includes(' ') || s.length > 30));
+        if (!aiReply) aiReply = cleaned.find(s => !isGenId(s));
+        if (!aiReply) aiReply = cleaned[0] || null;
+        if (!aiReply) aiReply = JSON.stringify(resp);
 
-        aiReply = String(aiReply).replace(/\s+/g, ' ').trim().slice(0, 4000);
+        aiReply = String(aiReply).slice(0, 4000);
         console.log('AI extracted reply:', aiReply);
         return res.json({ suggestions: [aiReply] });
     } catch (error) {
