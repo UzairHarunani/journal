@@ -6,34 +6,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionsContainer = document.getElementById('suggestions-container');
     const moodSelect = document.getElementById('mood-select');
 
-    journalForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const entry = journalInput.value;
-        const mood = moodSelect.value;
+    if (journalForm) {
+        journalForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const entry = journalInput ? journalInput.value : '';
+            const mood = moodSelect ? moodSelect.value : '';
 
-        if (entry) {
-            try {
-                const response = await fetch(`${apiUrl}/submit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ entry, mood }),
-                });
+            if (entry) {
+                try {
+                    const response = await fetch(`${apiUrl}/submit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entry, mood }),
+                    });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    displaySuggestions(data.suggestions);
-                    saveEntry(entry, data.suggestions[0], mood); // Only save here, with AI response and mood
-                    loadEntries();
-                    displayLatestEntry(entry);
-                    journalInput.value = '';
-                } else {
-                    console.error('Error submitting journal entry:', response.statusText);
+                    if (response.ok) {
+                        const data = await response.json();
+                        displaySuggestions(data.suggestions);
+                        saveEntry(entry, data.suggestions[0], mood); // Only save here, with AI response and mood
+                        loadEntries();
+                        displayLatestEntry(entry);
+                        journalInput.value = '';
+                    } else {
+                        console.error('Error submitting journal entry:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error submitting journal entry:', error);
                 }
-            } catch (error) {
-                console.error('Error submitting journal entry:', error);
             }
-        }
-    });
+        });
+    } else {
+        console.warn('No element with id "journal-form" found. Submit handler not attached.');
+    }
 
     function displayLatestEntry(entry) {
         const latestEntryContainer = document.getElementById('latest-entry-container');
