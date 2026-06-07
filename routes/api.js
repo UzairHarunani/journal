@@ -52,7 +52,26 @@ router.post('/submit', async (req, res) => {
             }
         );
 
-        const aiReply = response.data?.choices?.[0]?.message?.content || String(response.data);
+        const resp = response.data;
+        console.log('AI raw response:', resp);
+        let aiReply = '';
+        const choice = resp?.choices?.[0];
+        if (choice) {
+            const msg = choice.message ?? choice;
+            if (typeof msg === 'string') {
+                aiReply = msg;
+            } else if (typeof msg?.content === 'string') {
+                aiReply = msg.content;
+            } else if (Array.isArray(msg?.content?.parts)) {
+                aiReply = msg.content.parts.join(' ');
+            } else {
+                aiReply = JSON.stringify(msg);
+            }
+        } else if (typeof resp === 'string') {
+            aiReply = resp;
+        } else {
+            aiReply = JSON.stringify(resp);
+        }
         return res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
