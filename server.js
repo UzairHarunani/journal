@@ -22,6 +22,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 const apiRoutes = require('./routes/api');
 app.use('/api', apiRoutes);
 
+// Add a JSON parse error handler to log raw body and return JSON (helps debug 400s)
+app.use((err, req, res, next) => {
+    if (err && err.type === 'entity.parse.failed') {
+        console.error('JSON parse error:', err.message);
+        console.error('Raw body:', req.rawBody);
+        return res.status(400).json({ error: 'Invalid JSON payload', details: err.message, rawBody: req.rawBody });
+    }
+    // Fallback for SyntaxError thrown by body-parser
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('SyntaxError parsing JSON:', err.message);
+        console.error('Raw body:', req.rawBody);
+        return res.status(400).json({ error: 'Invalid JSON payload', details: err.message, rawBody: req.rawBody });
+    }
+    next(err);
+});
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
