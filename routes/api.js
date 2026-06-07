@@ -55,40 +55,40 @@ router.post('/submit', async (req, res) => {
         const resp = response.data;
         console.log('AI raw response:', resp);
 
-        let aiReply = '';
-
-        // Normalize common provider shapes into a readable string
-        if (typeof resp === 'string') {
-            aiReply = resp;
-        } else if (Array.isArray(resp)) {
-            aiReply = resp.map(r => (typeof r === 'string' ? r : JSON.stringify(r))).join('\n');
-        } else {
-            const choice = resp.choices?.[0] ?? resp.output?.[0] ?? resp.outputs?.[0] ?? null;
-            if (choice) {
-                const message = choice.message ?? choice;
-                if (typeof message === 'string') {
-                    aiReply = message;
-                } else if (typeof message?.content === 'string') {
-                    aiReply = message.content;
-                } else if (Array.isArray(message?.content?.parts)) {
-                    aiReply = message.content.parts.join(' ');
-                } else if (Array.isArray(message?.content)) {
-                    aiReply = message.content.join(' ');
-                } else if (typeof message?.text === 'string') {
-                    aiReply = message.text;
-                } else {
-                    aiReply = JSON.stringify(message);
+        // Robust extractor: find the first non-empty string anywhere in the response
+        function extractFirstString(obj, depth = 0) {
+            if (depth > 12 || obj == null) return null;
+            if (typeof obj === 'string' && obj.trim().length) return obj;
+            if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+            if (Array.isArray(obj)) {
+                for (const item of obj) {
+                    const s = extractFirstString(item, depth + 1);
+                    if (s) return s;
                 }
-            } else {
-                aiReply = JSON.stringify(resp);
+                return null;
             }
+            if (typeof obj === 'object') {
+                // prefer common fields first
+                const tryKeys = ['text', 'content', 'message', 'parts', 'output', 'outputs', 'generated_text', 'data'];
+                for (const k of tryKeys) {
+                    if (k in obj) {
+                        const s = extractFirstString(obj[k], depth + 1);
+                        if (s) return s;
+                    }
+                }
+                // fallback: traverse values
+                for (const v of Object.values(obj)) {
+                    const s = extractFirstString(v, depth + 1);
+                    if (s) return s;
+                }
+            }
+            return null;
         }
 
-        // Ensure aiReply is a JSON string (prevents "[object Object]")
-        if (typeof aiReply !== 'string') {
-            aiReply = JSON.stringify(aiReply);
-        }
-
+        let aiReply = extractFirstString(resp) || JSON.stringify(resp);
+        // Tidy whitespace and limit length to avoid dumping huge debug blobs
+        aiReply = aiReply.replace(/\s+/g, ' ').trim().slice(0, 4000);
+        console.log('AI extracted reply:', aiReply);
         return res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
