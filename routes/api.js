@@ -54,24 +54,41 @@ router.post('/submit', async (req, res) => {
 
         const resp = response.data;
         console.log('AI raw response:', resp);
+
         let aiReply = '';
-        const choice = resp?.choices?.[0];
-        if (choice) {
-            const msg = choice.message ?? choice;
-            if (typeof msg === 'string') {
-                aiReply = msg;
-            } else if (typeof msg?.content === 'string') {
-                aiReply = msg.content;
-            } else if (Array.isArray(msg?.content?.parts)) {
-                aiReply = msg.content.parts.join(' ');
-            } else {
-                aiReply = JSON.stringify(msg);
-            }
-        } else if (typeof resp === 'string') {
+
+        // Normalize common provider shapes into a readable string
+        if (typeof resp === 'string') {
             aiReply = resp;
+        } else if (Array.isArray(resp)) {
+            aiReply = resp.map(r => (typeof r === 'string' ? r : JSON.stringify(r))).join('\n');
         } else {
-            aiReply = JSON.stringify(resp);
+            const choice = resp.choices?.[0] ?? resp.output?.[0] ?? resp.outputs?.[0] ?? null;
+            if (choice) {
+                const message = choice.message ?? choice;
+                if (typeof message === 'string') {
+                    aiReply = message;
+                } else if (typeof message?.content === 'string') {
+                    aiReply = message.content;
+                } else if (Array.isArray(message?.content?.parts)) {
+                    aiReply = message.content.parts.join(' ');
+                } else if (Array.isArray(message?.content)) {
+                    aiReply = message.content.join(' ');
+                } else if (typeof message?.text === 'string') {
+                    aiReply = message.text;
+                } else {
+                    aiReply = JSON.stringify(message);
+                }
+            } else {
+                aiReply = JSON.stringify(resp);
+            }
         }
+
+        // Ensure aiReply is a JSON string (prevents "[object Object]")
+        if (typeof aiReply !== 'string') {
+            aiReply = JSON.stringify(aiReply);
+        }
+
         return res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
