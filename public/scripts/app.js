@@ -6,6 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionsContainer = document.getElementById('suggestions-container');
     const moodSelect = document.getElementById('mood-select');
 
+    // quick health check to see server response before submitting entries
+    (async () => {
+        try {
+            const h = await fetch(`${apiUrl}/health`);
+            console.log('API /health status:', h.status, await (async () => { try { return await h.text(); } catch(e){ return '<no body>'; } })());
+        } catch (e) {
+            console.warn('API health check failed:', e);
+        }
+    })();
+
     if (journalForm) {
         journalForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -14,10 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (entry) {
                 try {
+                    const payload = { entry, text: entry, mood }; // include "text" in case server expects it
+                    console.log('Submitting to API:', `${apiUrl}/submit`, payload);
                     const response = await fetch(`${apiUrl}/submit`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ entry, mood }),
+                        body: JSON.stringify(payload),
                     });
 
                     if (response.ok) {
@@ -31,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Read response body to help debug server 500s (may be JSON or text)
                         let body;
                         try {
-                            body = await response.text();
+                            // try JSON first, then text
+                            body = await response.clone().json().catch(() => response.clone().text());
                         } catch (e) {
                             body = '<unreadable response body>';
                         }
