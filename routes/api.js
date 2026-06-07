@@ -55,39 +55,59 @@ router.post('/submit', async (req, res) => {
         const resp = response.data;
         console.log('AI raw response:', resp);
 
-        // Robust extractor: find the first non-empty string anywhere in the response
-        function extractFirstString(obj, depth = 0) {
-            if (depth > 12 || obj == null) return null;
-            if (typeof obj === 'string' && obj.trim().length) return obj;
-            if (typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+        // Improved extractor: gather candidate strings, prefer meaningful text,
+        // and skip generation IDs like "gen-...".
+        function isIdLikeString(s) {
+            return typeof s === 'string' && /^gen-[\w-]{6,}/i.test(s.trim());
+        }
+        function isMeaningfulString(s) {
+            if (typeof s !== 'string') return false;
+            const t = s.trim();
+            if (!t) return false;
+            if (t.length > 30) return true;
+            if (t.includes(' ')) return true;
+            // exclude short tokens that look like IDs
+            if (isIdLikeString(t)) return false;
+            return false;
+        }
+        function collectStrings(obj, arr, depth = 0) {
+            if (depth > 12 || obj == null) return;
+            if (typeof obj === 'string') {
+                arr.push(obj);
+                return;
+            }
+            if (typeof obj === 'number' || typeof obj === 'boolean') {
+                arr.push(String(obj));
+                return;
+            }
             if (Array.isArray(obj)) {
-                for (const item of obj) {
-                    const s = extractFirstString(item, depth + 1);
-                    if (s) return s;
-                }
-                return null;
+                for (const item of obj) collectStrings(item, arr, depth + 1);
+                return;
             }
             if (typeof obj === 'object') {
-                // prefer common fields first
-                const tryKeys = ['text', 'content', 'message', 'parts', 'output', 'outputs', 'generated_text', 'data'];
+                const tryKeys = ['text', 'content', 'message', 'parts', 'output', 'outputs', 'generated_text', 'data', 'text_raw', 'response'];
                 for (const k of tryKeys) {
-                    if (k in obj) {
-                        const s = extractFirstString(obj[k], depth + 1);
-                        if (s) return s;
-                    }
+                    if (k in obj) collectStrings(obj[k], arr, depth + 1);
                 }
-                // fallback: traverse values
-                for (const v of Object.values(obj)) {
-                    const s = extractFirstString(v, depth + 1);
-                    if (s) return s;
-                }
+                for (const v of Object.values(obj)) collectStrings(v, arr, depth + 1);
             }
-            return null;
         }
 
-        let aiReply = extractFirstString(resp) || JSON.stringify(resp);
-        // Tidy whitespace and limit length to avoid dumping huge debug blobs
-        aiReply = aiReply.replace(/\s+/g, ' ').trim().slice(0, 4000);
+        const candidates = [];
+        collectStrings(resp, candidates);
+        // Prefer the first meaningful candidate, otherwise first non-id, otherwise fallback
+        let aiReply = null;
+        for (const c of candidates) {
+            if (isMeaningfulString(c)) { aiReply = c; break; }
+        }
+        if (!aiReply) {
+            for (const c of candidates) {
+                if (!isIdLikeString(c)) { aiReply = c; break; }
+            }
+        }
+        if (!aiReply) aiReply = candidates[0] || JSON.stringify(resp);
+
+        aiReply = String(aiReply).replace(/\s+/g, ' ').trim().slice(0, 4000);
         console.log('AI extracted reply:', aiReply);
         return res.json({ suggestions: [aiReply] });
     } catch (error) {
