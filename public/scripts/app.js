@@ -26,9 +26,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         saveEntry(entry, data.suggestions[0], mood); // Only save here, with AI response and mood
                         loadEntries();
                         displayLatestEntry(entry);
-                        journalInput.value = '';
+                        if (journalInput) journalInput.value = '';
                     } else {
-                        console.error('Error submitting journal entry:', response.statusText);
+                        // Read response body to help debug server 500s (may be JSON or text)
+                        let body;
+                        try {
+                            body = await response.text();
+                        } catch (e) {
+                            body = '<unreadable response body>';
+                        }
+                        console.error('Error submitting journal entry:', response.status, body);
+                        // optional: show a friendly message to the user
                     }
                 } catch (error) {
                     console.error('Error submitting journal entry:', error);
@@ -42,11 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayLatestEntry(entry) {
         const latestEntryContainer = document.getElementById('latest-entry-container');
         const latestEntry = document.getElementById('latest-entry');
+        if (!latestEntry || !latestEntryContainer) return;
         latestEntry.textContent = entry;
         latestEntryContainer.style.display = 'block';
     }
 
     function displaySuggestions(suggestions) {
+        if (!suggestionsContainer) return;
         suggestionsContainer.innerHTML = '';
         suggestions.forEach(suggestion => {
             const suggestionElement = document.createElement('div');
@@ -96,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const idx = this.getAttribute('data-idx');
                     const aiDiv = this.parentElement.nextElementSibling;
                     const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-                    aiDiv.innerHTML = entries[idx].aiResponse || "No AI response saved."; // Use innerHTML here
+                    // use textContent to avoid injecting raw HTML
+                    aiDiv.textContent = (entries[idx] && entries[idx].aiResponse) ? entries[idx].aiResponse : "No AI response saved.";
                     aiDiv.style.display = aiDiv.style.display === 'block' ? 'none' : 'block';
                 });
             });
@@ -113,17 +124,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Call loadEntries on page load:
     loadEntries();
 
-    document.getElementById('export-btn').addEventListener('click', () => {
-        const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
-        let text = entries.map(e => `${new Date(e.date).toLocaleString()}\n${e.text}\nAI: ${e.aiResponse}\n`).join('\n---\n');
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'journal.txt';
-        a.click();
-        URL.revokeObjectURL(url);
-    });
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+            let text = entries.map(e => `${new Date(e.date).toLocaleString()}\n${e.text}\nAI: ${e.aiResponse}\n`).join('\n---\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'journal.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    } else {
+        console.warn('No element with id "export-btn" found.');
+    }
 
     // Daily prompt logic
     const prompts = [
@@ -132,7 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
         "What challenge did you overcome today?",
         "How are you feeling right now?"
     ];
-    document.getElementById('daily-prompt').textContent =
-        prompts[new Date().getDate() % prompts.length];
+    const dailyPromptEl = document.getElementById('daily-prompt');
+    if (dailyPromptEl) {
+        dailyPromptEl.textContent = prompts[new Date().getDate() % prompts.length];
+    }
 
 });
