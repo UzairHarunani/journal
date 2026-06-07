@@ -37,7 +37,10 @@ router.post('/submit', async (req, res) => {
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: entry }
-                ]
+                ],
+                max_tokens: 512,        // limit tokens to avoid exceeding quota
+                temperature: 0.7,
+                n: 1
             },
             {
                 headers: {
@@ -52,8 +55,15 @@ router.post('/submit', async (req, res) => {
         return res.json({ suggestions: [aiReply] });
     } catch (error) {
         console.error('Error contacting AI:', error.response ? error.response.data : error.message);
-        // return original error body when available to help debug
-        const details = error.response ? error.response.data : error.message;
+        const respData = error.response ? error.response.data : null;
+        // If provider reports insufficient credits / payment required, return 402-like info
+        if (respData && respData.error && respData.error.code === 402) {
+            return res.status(402).json({
+                error: 'Insufficient credits for AI request',
+                details: respData.error.message || respData
+            });
+        }
+        const details = respData || error.message;
         return res.status(502).json({ error: 'Failed to get AI suggestions', details });
     }
 });
